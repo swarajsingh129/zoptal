@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,10 +19,10 @@ class _MapScreenState extends State<MapScreen> {
   late CameraPosition initialCameraPostion;
   final Completer<GoogleMapController> _controller = Completer();
   Set<Marker> _markers = Set<Marker>();
-  Set<Polyline> _polylines = Set<Polyline>();
+  Map<PolylineId, Polyline> polylines = {};
   List<LatLng> polylineCoordinates = [];
-  late PolylinePoints polylinePoints;
-  String googleAPIKey = "";
+  PolylinePoints polylinePoints = PolylinePoints();
+  String googleAPIKey = "AIzaSyBXGWnGSHV8AJpdB6LVYGmfL70pwWcDErA";
 
   late LocationData currentLocation;
 
@@ -53,7 +54,8 @@ class _MapScreenState extends State<MapScreen> {
           ),
           actions: [
             IconButton(
-                onPressed: () {
+                onPressed: () async {
+                  clearCor();
                   showPlacePicker();
                 },
                 icon: const Icon(Icons.search))
@@ -67,14 +69,21 @@ class _MapScreenState extends State<MapScreen> {
               compassEnabled: true,
               tiltGesturesEnabled: false,
               markers: _markers,
-              polylines: _polylines,
+              polylines: Set<Polyline>.of(polylines.values),
               mapType: MapType.normal,
               initialCameraPosition: initialCameraPostion,
               onMapCreated: (GoogleMapController controller) {
                 _controller.complete(controller);
 
                 showPinsOnMap();
-              }),
+              },
+              onTap: (v) async {
+                desLatitude = v.latitude;
+                desLong = v.longitude;
+                clearCor();
+                await showPinsOnMap();
+              },
+            ),
     );
   }
 
@@ -108,10 +117,12 @@ class _MapScreenState extends State<MapScreen> {
 
     desLatitude = result.latLng!.latitude;
     desLong = result.latLng!.longitude;
-    showPinsOnMap();
+    setState(() {
+      showPinsOnMap();
+    });
   }
 
-  void showPinsOnMap() {
+  showPinsOnMap() async {
     var pinPosition = LatLng(
         currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0);
     var destPosition = LatLng(desLatitude, desLong);
@@ -121,13 +132,13 @@ class _MapScreenState extends State<MapScreen> {
     ));
 
     _markers.add(Marker(
-      markerId: const MarkerId('destPin'),
-      position: destPosition,
-    ));
-    setPolylines();
+        markerId: const MarkerId('destPin'),
+        position: destPosition,
+        icon: BitmapDescriptor.defaultMarkerWithHue(90)));
+    await setPolylines();
   }
 
-  void updatePinOnMap() async {
+  updatePinOnMap() async {
     CameraPosition cPosition = CameraPosition(
       zoom: CAMERA_ZOOM,
       tilt: CAMERA_TILT,
@@ -150,26 +161,36 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  void setPolylines() async {
+  setPolylines() async {
     PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
       googleAPIKey,
       PointLatLng(
           currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
-      PointLatLng(
-          currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
+      PointLatLng(desLatitude, desLong),
     );
 
     if (result.points.isNotEmpty) {
       result.points.forEach((PointLatLng point) {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
       });
-      setState(() {
+
+      PolylineId id = PolylineId("poly");
+      Polyline polyline = Polyline(
+          polylineId: id, color: Colors.red, points: polylineCoordinates);
+      polylines[id] = polyline;
+      setState(() {});
+      /* setState(() {
         _polylines.add(Polyline(
             width: 5,
             polylineId: const PolylineId("poly"),
             color: const Color.fromARGB(255, 40, 122, 198),
             points: polylineCoordinates));
-      });
+      });*/
     }
+  }
+
+  clearCor() {
+    polylineCoordinates.clear();
+    polylines.clear();
   }
 }
