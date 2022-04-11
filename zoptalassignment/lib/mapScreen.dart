@@ -22,7 +22,7 @@ class _MapScreenState extends State<MapScreen> {
   Map<PolylineId, Polyline> polylines = {};
   List<LatLng> polylineCoordinates = [];
   PolylinePoints polylinePoints = PolylinePoints();
-  String googleAPIKey = "AIzaSyBXGWnGSHV8AJpdB6LVYGmfL70pwWcDErA";
+  String googleAPIKey = "";
 
   late LocationData currentLocation;
 
@@ -108,7 +108,7 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  void showPlacePicker() async {
+   showPlacePicker() async {
     LocationResult result = await Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => PlacePicker(
               googleAPIKey,
@@ -174,18 +174,12 @@ class _MapScreenState extends State<MapScreen> {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
       });
 
-      PolylineId id = PolylineId("poly");
+      PolylineId id = const PolylineId("poly");
       Polyline polyline = Polyline(
           polylineId: id, color: Colors.red, points: polylineCoordinates);
       polylines[id] = polyline;
       setState(() {});
-      /* setState(() {
-        _polylines.add(Polyline(
-            width: 5,
-            polylineId: const PolylineId("poly"),
-            color: const Color.fromARGB(255, 40, 122, 198),
-            points: polylineCoordinates));
-      });*/
+    
     }
   }
 
