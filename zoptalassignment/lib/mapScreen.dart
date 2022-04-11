@@ -92,6 +92,8 @@ class _MapScreenState extends State<MapScreen> {
     LocationData _locationData = await location.getLocation();
     initpos =
         LatLng(_locationData.latitude ?? 0.0, _locationData.longitude ?? 0.0);
+    desLatitude = _locationData.latitude ?? 0.0;
+    desLong = _locationData.longitude ?? 0.0;
     initialCameraPostion = CameraPosition(
         bearing: CAMERA_BEARING,
         target: initpos,
@@ -108,7 +110,7 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-   showPlacePicker() async {
+  showPlacePicker() async {
     LocationResult result = await Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => PlacePicker(
               googleAPIKey,
@@ -179,7 +181,6 @@ class _MapScreenState extends State<MapScreen> {
           polylineId: id, color: Colors.red, points: polylineCoordinates);
       polylines[id] = polyline;
       setState(() {});
-    
     }
   }
 
